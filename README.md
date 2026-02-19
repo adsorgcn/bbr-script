@@ -67,13 +67,13 @@
 ### 一键安装命令
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/你的用户名/仓库名/main/newbbr.sh)
+bash <(curl -sL https://raw.githubusercontent.com/adsorgcn/bbr-script/main/newbbr.sh)
 ```
 
 或者使用 wget：
 
 ```bash
-wget -O newbbr.sh https://raw.githubusercontent.com/你的用户名/仓库名/main/newbbr.sh && bash newbbr.sh
+wget -O newbbr.sh https://raw.githubusercontent.com/adsorgcn/bbr-script/main/newbbr.sh && bash newbbr.sh
 ```
 
 ### 使用步骤
