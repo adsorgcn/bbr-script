@@ -287,7 +287,7 @@ sysctl net.ipv4.tcp_congestion_control
 
 - **QQ群：** 615298
 - **作者：** 静水流深
-- **问题反馈：** [GitHub Issues](https://github.com/你的用户名/仓库名/issues)
+- **问题反馈：** [GitHub Issues](https://github.com/adsorgcn/bbr-script/issues)
 
 ## 📜 开源协议
 
