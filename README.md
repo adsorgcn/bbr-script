@@ -1,311 +1,660 @@
-# BBR 一键加速脚本
-
-<div align="center">
-
-![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![System](https://img.shields.io/badge/system-CentOS%20|%20Ubuntu%20|%20Debian-orange.svg)
-
-**一键全自动优化加速你的Linux服务器**
-
-适合Linux新手，自动检测依赖，智能优化配置
-
-[快速开始](#-快速开始) · [功能特性](#-功能特性) · [常见问题](#-常见问题) · [技术支持](#-技术支持)
-
-</div>
-
----
-
-## 📖 项目介绍
-
-这是一个经过深度优化的BBR一键加速脚本，基于 [ylx2016/Linux-NetSpeed](https://github.com/ylx2016/Linux-NetSpeed) 项目改进而来。
-
-**主要改进：**
-- ✅ 修复所有已知BUG（CentOS源失败、GitHub依赖等）
-- ✅ 代码精简75%，从2337行优化到571行
-- ✅ 新增自动依赖检查和安装
-- ✅ 智能检测内核版本，避免重复升级
-- ✅ 完善的错误提示和重试机制
-- ✅ 针对国内VPS优化（阿里云Vault源、CDN镜像）
-
-## ✨ 功能特性
-
-### 🚀 核心功能
-
-| 功能 | 说明 |
-|------|------|
-| **BBR加速** | 启用Google BBR拥塞控制算法，提升网络速度 |
-| **内核升级** | 自动升级到最新稳定内核（支持原生BBR） |
-| **智能检测** | 自动检测系统、内核版本、虚拟化类型 |
-| **旧内核清理** | 清理多余旧内核，释放/boot空间 |
-| **系统优化** | TCP参数优化、网络栈调优 |
-
-### 🛡️ 安全特性
-
-- ✅ Root权限检查
-- ✅ 虚拟化类型检测（OpenVZ警告）
-- ✅ /boot空间检查
-- ✅ 网络连接验证
-- ✅ CA证书自动更新
-
-### 🌐 系统支持
-
-| 系统 | 版本 | 状态 |
-|------|------|------|
-| **CentOS** | 6 / 7 / 8 | ✅ 完美支持（自动修复停服源） |
-| **Ubuntu** | 16.04 / 18.04 / 20.04 / 22.04 / 24.04 | ✅ 完美支持 |
-| **Debian** | 8 / 9 / 10 / 11 / 12 / 13 | ✅ 完美支持 |
-
-**虚拟化支持：**
-- ✅ KVM
-- ✅ Xen  
-- ✅ VMware
-- ❌ OpenVZ（无法更换内核）
-
-## 🚀 快速开始
-
-### 一键安装命令
-
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/adsorgcn/bbr-script/main/newbbr.sh)
-```
-
-或者使用 wget：
-
-```bash
-wget -O newbbr.sh https://raw.githubusercontent.com/adsorgcn/bbr-script/main/newbbr.sh && bash newbbr.sh
-```
-
-### 使用步骤
-
-**对于新手用户（推荐）：**
-
-1. **首次运行**：选择 `1` - 安装/启用 BBR
-   - 如果内核支持BBR → 直接启用（30秒完成）
-   - 如果内核不支持 → 提示需要升级内核
-
-2. **升级内核**（如果需要）：
-   - Ubuntu/Debian 系统 → 选择 `2`
-   - CentOS 系统 → 选择 `3`
-   - 等待下载安装（3-10分钟）
-   - 重启VPS
-
-3. **启用BBR**：重启后再次运行脚本，选择 `1`
-
-4. **验证效果**：
-   ```bash
-   # 查看BBR状态
-   lsmod | grep bbr
-   sysctl net.ipv4.tcp_congestion_control
-   ```
-
-## 📋 菜单说明
-
-```
-╔═════════════════════════════════════════════════╗
-║       BBR一键加速脚本 v1.0.2 (优化版)        ║
-║       适用于Linux新手，自动检测依赖            ║
-║                                                 ║
-║       作者: 静水流深    QQ群: 615298           ║
-╚═════════════════════════════════════════════════╝
-
-==================== 系统状态 ====================
-系统: centos 8
-架构: x86_64
-内核: 4.18.0-553.6.1.el8.x86_64
-BBR状态: ❌ 未启用
-BBR模块: ❌ 未加载
-队列算法: pfifo_fast
-拥塞算法: cubic
-=================================================
-
-1. 安装/启用 BBR (推荐先选此项)
-2. 升级内核（Ubuntu/Debian）
-3. 升级内核（CentOS）
-4. 清理旧内核 (释放/boot空间)
-5. 查看状态
--------------
-0. 退出
-
-请选择操作 [0-5]:
-```
-
-## 🎯 优化亮点
-
-### 相比原版的改进
-
-| 项目 | 原版 | 优化版 |
-|------|------|--------|
-| **代码行数** | 2337行 | 571行（精简75%） |
-| **CentOS源** | ❌ 未修复 | ✅ 自动切换Vault源 |
-| **内核检测** | ❌ 不检测5.4+ | ✅ 智能检测原生BBR |
-| **依赖安装** | ❌ 需手动 | ✅ 自动检测安装 |
-| **错误提示** | ❌ 简陋 | ✅ 详细友好 |
-| **重试机制** | ❌ 无 | ✅ 自动重试3次 |
-| **国内优化** | ❌ 无 | ✅ 阿里云镜像优先 |
-
-### 已修复的问题
-
-1. ✅ CentOS 6/7/8 官方源停服问题
-2. ✅ CentOS 8 升级内核卡住问题  
-3. ✅ Ubuntu HWE包名变更问题
-4. ✅ 内核5.4+重复升级问题
-5. ✅ 缺少CA证书导致下载失败
-6. ✅ OpenVZ虚拟化误操作问题
-7. ✅ /boot空间不足导致失败
-
-## ❓ 常见问题
-
-<details>
-<summary><b>Q1: 什么系统可以使用？</b></summary>
-
-**支持：**
-- CentOS 6/7/8
-- Ubuntu 16.04+
-- Debian 8+
-
-**不支持：**
-- OpenVZ虚拟化（无法更换内核）
-- 过旧的系统版本
-
-检查虚拟化类型：
-```bash
-systemd-detect-virt
-```
-</details>
-
-<details>
-<summary><b>Q2: BBR有什么用？</b></summary>
-
-BBR（Bottleneck Bandwidth and RTT）是Google开发的拥塞控制算法。
-
-**优势：**
-- 高延迟环境下提升30-50%速度
-- 丢包场景下表现优异
-- 特别适合国际网络连接
-
-**适用场景：**
-- VPS连接国外服务
-- 代理服务器
-- 高延迟网络环境
-</details>
-
-<details>
-<summary><b>Q3: 升级内核安全吗？</b></summary>
-
-**安全性：**
-- ✅ 脚本使用官方源（ELRepo/官方仓库）
-- ✅ 保留旧内核，出问题可回退
-- ✅ 千万用户验证，非常成熟
-
-**注意事项：**
-- 升级前备份重要数据
-- 确保/boot空间充足（>100MB）
-- 某些云服务商定制内核可能失去厂商优化
-</details>
-
-<details>
-<summary><b>Q4: CentOS 8 升级内核很慢怎么办？</b></summary>
-
-**正常情况：**
-- 内核包约150-200MB
-- 国内VPS需要3-10分钟
-- 国外VPS可能需要10-20分钟
-
-**优化建议：**
-- 脚本会自动重试3次
-- 优先使用阿里云镜像
-- 如果超过20分钟可以Ctrl+C中断重试
-</details>
-
-<details>
-<summary><b>Q5: 启用BBR后怎么验证？</b></summary>
-
-**验证方法：**
-
-1. 查看BBR模块：
-```bash
-lsmod | grep bbr
-```
-应该看到 `tcp_bbr`
-
-2. 查看拥塞控制算法：
-```bash
-sysctl net.ipv4.tcp_congestion_control
-```
-应该显示 `bbr`
-
-3. 运行脚本选择 `5` 查看状态
-</details>
-
-<details>
-<summary><b>Q6: 可以在生产环境使用吗？</b></summary>
-
-**可以，但建议：**
-- ✅ 先在测试环境验证
-- ✅ 选择业务低峰期操作
-- ✅ 备份重要数据和配置
-- ✅ 准备回退方案
-
-**风险评估：**
-- 内核升级：低风险（可回退）
-- BBR启用：几乎无风险（只是参数调整）
-</details>
-
-## 📊 性能提升
-
-**实测数据（仅供参考）：**
-
-| 场景 | 未启用BBR | 启用BBR | 提升 |
-|------|-----------|---------|------|
-| 国内访问国外 | 2.5 MB/s | 3.8 MB/s | +52% |
-| 高延迟环境（200ms+） | 1.2 MB/s | 2.1 MB/s | +75% |
-| 丢包环境（5%） | 800 KB/s | 1.5 MB/s | +88% |
-
-*具体效果取决于网络环境*
-
-## 🔄 更新日志
-
-### v1.0.2 (2025-02-19)
-- 🔧 修复CentOS 8升级内核卡住问题
-- ✅ 添加yum超时配置和自动重试
-- ✅ 优化下载提示信息
-- ✅ 改进失败提示和手动操作指南
-
-### v1.0.1 (2025-02-19)
-- ✅ 添加作者和QQ群信息到菜单
-- ✅ 优化界面显示
-
-### v1.0.0 (2025-02-19)
-- 🎉 首次发布
-- ✅ 基于ylx2016/Linux-NetSpeed深度优化
-- ✅ 修复所有已知BUG
-- ✅ 代码精简75%
-- ✅ 新增小白友好功能
-
-## 📞 技术支持
-
-- **QQ群：** 615298
-- **作者：** 静水流深
-- **网站：** [中国站长](https://cnwebmasters.com)
-- **问题反馈：** [GitHub Issues](https://github.com/adsorgcn/bbr-script/issues)
-
-## 📜 开源协议
-
-本项目采用 MIT 协议开源
-
-## 🙏 致谢
-
-- 原始项目：[ylx2016/Linux-NetSpeed](https://github.com/ylx2016/Linux-NetSpeed)
-- BBR算法：Google
-- 社区贡献者
-
----
-
-<div align="center">
-
-**如果这个项目对你有帮助，请给个 ⭐ Star 支持一下！**
-
-Made with ❤️ by 静水流深
-
-</div>
+#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+#=================================================
+#	System: CentOS 6/7, Debian 8+, Ubuntu 16+
+#	Description: 一键全自动优化加速你的服务器
+#	Version: 1.0.3
+#	Author: 静水流深
+#	QQ群: 615298
+#=================================================
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+PLAIN='\033[0m'
+
+sh_ver="1.0.3"
+
+# 检查root权限
+[[ $EUID -ne 0 ]] && echo -e "${RED}错误：请使用root用户运行此脚本${PLAIN}" && exit 1
+
+# 系统信息
+if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    OS=$ID
+    VER=$VERSION_ID
+elif [[ -f /etc/redhat-release ]]; then
+    OS="centos"
+    VER=$(grep -oE '[0-9]+' /etc/redhat-release | head -1)
+else
+    echo -e "${RED}不支持的系统${PLAIN}"
+    exit 1
+fi
+
+# 架构检测
+ARCH=$(uname -m)
+[[ $ARCH == "x86_64" ]] && ARCH_NAME="amd64" || ARCH_NAME=$ARCH
+
+echo -e "${BLUE}检测到系统: $OS $VER ($ARCH)${PLAIN}"
+
+# 检查必要依赖并自动安装
+check_dependencies() {
+    echo -e "${BLUE}检查系统依赖...${PLAIN}"
+    
+    # 检测包管理器
+    if [[ "$OS" =~ centos|rhel|fedora ]]; then
+        PKG_MANAGER="yum"
+        PKG_INSTALL="yum install -y"
+        DEPS="ca-certificates wget curl"
+    elif [[ "$OS" =~ debian|ubuntu ]]; then
+        PKG_MANAGER="apt-get"
+        PKG_INSTALL="apt-get install -y"
+        DEPS="ca-certificates wget curl"
+    else
+        echo -e "${YELLOW}未知包管理器，跳过依赖检查${PLAIN}"
+        return 0
+    fi
+    
+    # 检查并安装依赖
+    local need_install=()
+    for dep in $DEPS; do
+        local installed=0
+        # ca-certificates 是包名不是命令，需要特殊检测
+        if [[ "$dep" == "ca-certificates" ]]; then
+            rpm -q ca-certificates &>/dev/null && installed=1
+            dpkg -l ca-certificates 2>/dev/null | grep -q "^ii" && installed=1
+            [[ -f /etc/ssl/certs/ca-certificates.crt || -f /etc/pki/tls/certs/ca-bundle.crt ]] && installed=1
+        else
+            command -v "$dep" &>/dev/null && installed=1
+        fi
+        [[ $installed -eq 0 ]] && need_install+=("$dep")
+    done
+    
+    if [[ ${#need_install[@]} -gt 0 ]]; then
+        echo -e "${YELLOW}缺少依赖: ${need_install[*]}${PLAIN}"
+        echo -e "${BLUE}正在自动安装依赖...${PLAIN}"
+        
+        if [[ "$OS" =~ centos|rhel|fedora ]]; then
+            $PKG_INSTALL ${need_install[*]}
+            # 更新CA证书
+            update-ca-trust force-enable 2>/dev/null
+        elif [[ "$OS" =~ debian|ubuntu ]]; then
+            apt-get update -qq
+            $PKG_INSTALL ${need_install[*]}
+            # 更新CA证书
+            update-ca-certificates 2>/dev/null
+        fi
+        
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}依赖安装完成${PLAIN}"
+        else
+            echo -e "${RED}依赖安装失败，可能影响脚本运行${PLAIN}"
+        fi
+    else
+        echo -e "${GREEN}所有依赖已安装${PLAIN}"
+    fi
+}
+
+# 检查虚拟化类型
+check_virt() {
+    echo -e "${BLUE}检查虚拟化类型...${PLAIN}"
+    
+    # 尝试使用systemd-detect-virt
+    if command -v systemd-detect-virt &>/dev/null; then
+        virt_type=$(systemd-detect-virt)
+    elif command -v virt-what &>/dev/null; then
+        virt_type=$(virt-what | head -1)
+    else
+        # 简单检测
+        if grep -q "openvz" /proc/vz/version 2>/dev/null || grep -q "openvz" /proc/cpuinfo 2>/dev/null; then
+            virt_type="openvz"
+        else
+            virt_type="unknown"
+        fi
+    fi
+    
+    echo -e "${GREEN}虚拟化类型: ${virt_type}${PLAIN}"
+    
+    # OpenVZ检测
+    if [[ "$virt_type" == "openvz" ]]; then
+        echo -e "${RED}╔════════════════════════════════════════════╗${PLAIN}"
+        echo -e "${RED}║  警告：检测到OpenVZ虚拟化                 ║${PLAIN}"
+        echo -e "${RED}║  OpenVZ容器无法更换内核，无法启用BBR      ║${PLAIN}"
+        echo -e "${RED}║  建议：更换为KVM/Xen虚拟化的VPS           ║${PLAIN}"
+        echo -e "${RED}╚════════════════════════════════════════════╝${PLAIN}"
+        read -p "是否继续（可能失败）? [y/N]: " continue_openvz
+        [[ ! "$continue_openvz" =~ ^[Yy]$ ]] && exit 1
+    fi
+}
+
+# 检查/boot分区空间
+check_boot_space() {
+    echo -e "${BLUE}检查/boot分区空间...${PLAIN}"
+    
+    # 获取/boot分区可用空间（MB）
+    boot_available=$(df -m /boot 2>/dev/null | tail -1 | awk '{print $4}')
+    
+    if [[ -n "$boot_available" ]]; then
+        if [[ $boot_available -lt 100 ]]; then
+            echo -e "${RED}警告：/boot分区空间不足 (可用: ${boot_available}MB)${PLAIN}"
+            echo -e "${YELLOW}建议：先清理旧内核释放空间，或确保有至少100MB可用空间${PLAIN}"
+            read -p "是否继续? [y/N]: " continue_boot
+            [[ ! "$continue_boot" =~ ^[Yy]$ ]] && exit 1
+        else
+            echo -e "${GREEN}/boot分区空间充足 (可用: ${boot_available}MB)${PLAIN}"
+        fi
+    fi
+}
+
+# 检查网络连接
+check_network() {
+    echo -e "${BLUE}检查网络连接...${PLAIN}"
+    
+    local mirrors=(
+        "https://mirrors.aliyun.com"
+        "https://mirrors.163.com"
+        "https://mirrors.tuna.tsinghua.edu.cn"
+        "https://www.baidu.com"
+    )
+    
+    for mirror in "${mirrors[@]}"; do
+        if curl -s --connect-timeout 5 "$mirror" > /dev/null 2>&1; then
+            echo -e "${GREEN}网络连接正常（${mirror}）${PLAIN}"
+            return 0
+        fi
+    done
+    
+    if ping -c 2 8.8.8.8 > /dev/null 2>&1; then
+        echo -e "${YELLOW}网络连接正常但HTTPS访问受限${PLAIN}"
+        return 0
+    else
+        echo -e "${RED}网络连接失败，请检查网络设置${PLAIN}"
+        return 1
+    fi
+}
+
+# 修复CentOS死源
+fixCentOSRepo() {
+    [[ ! "$OS" =~ centos ]] && return
+    [[ "$VER" != "6" && "$VER" != "7" && "$VER" != "8" ]] && return
+    
+    echo -e "${YELLOW}检测到CentOS ${VER}，官方源已停服，切换到Vault/阿里云源...${PLAIN}"
+    mkdir -p /etc/yum.repos.d/backup
+    mv /etc/yum.repos.d/CentOS-*.repo /etc/yum.repos.d/backup/ 2>/dev/null
+    
+    if [[ "$VER" == "7" ]]; then
+        cat > /etc/yum.repos.d/CentOS-Vault.repo <<'EOF'
+[base]
+name=CentOS-7-Vault-Base
+baseurl=https://mirrors.aliyun.com/centos-vault/7.9.2009/os/$basearch/
+gpgcheck=0
+enabled=1
+[updates]
+name=CentOS-7-Vault-Updates
+baseurl=https://mirrors.aliyun.com/centos-vault/7.9.2009/updates/$basearch/
+gpgcheck=0
+enabled=1
+[extras]
+name=CentOS-7-Vault-Extras
+baseurl=https://mirrors.aliyun.com/centos-vault/7.9.2009/extras/$basearch/
+gpgcheck=0
+enabled=1
+EOF
+    elif [[ "$VER" == "6" ]]; then
+        cat > /etc/yum.repos.d/CentOS-Vault.repo <<'EOF'
+[base]
+name=CentOS-6-Vault-Base
+baseurl=https://mirrors.aliyun.com/centos-vault/6.10/os/$basearch/
+gpgcheck=0
+enabled=1
+[updates]
+name=CentOS-6-Vault-Updates
+baseurl=https://mirrors.aliyun.com/centos-vault/6.10/updates/$basearch/
+gpgcheck=0
+enabled=1
+EOF
+    elif [[ "$VER" == "8" ]]; then
+        cat > /etc/yum.repos.d/CentOS-Vault.repo <<'EOF'
+[baseos]
+name=CentOS-8-Vault-BaseOS
+baseurl=https://mirrors.aliyun.com/centos-vault/8.5.2111/BaseOS/$basearch/os/
+gpgcheck=0
+enabled=1
+[appstream]
+name=CentOS-8-Vault-AppStream
+baseurl=https://mirrors.aliyun.com/centos-vault/8.5.2111/AppStream/$basearch/os/
+gpgcheck=0
+enabled=1
+[extras]
+name=CentOS-8-Vault-Extras
+baseurl=https://mirrors.aliyun.com/centos-vault/8.5.2111/extras/$basearch/os/
+gpgcheck=0
+enabled=1
+EOF
+    fi
+    yum clean all >/dev/null 2>&1
+    echo -e "${GREEN}CentOS ${VER} Vault源配置完成${PLAIN}"
+}
+
+# 检测BBR状态
+check_bbr_status() {
+    local param=$(sysctl net.ipv4.tcp_congestion_control 2>/dev/null | awk '{print $3}')
+    if [[ "$param" == "bbr" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 检测内核版本是否支持原生BBR
+check_kernel_native_bbr() {
+    local kernel_version=$(uname -r | cut -d- -f1)
+    local major=$(echo "$kernel_version" | cut -d. -f1)
+    local minor=$(echo "$kernel_version" | cut -d. -f2)
+    
+    # 内核4.9+支持BBR，5.4+为最佳
+    if [[ $major -gt 5 ]] || [[ $major -eq 5 && $minor -ge 4 ]]; then
+        echo -e "${GREEN}当前内核 $kernel_version 原生支持BBR（最佳）${PLAIN}"
+        return 0
+    elif [[ $major -eq 4 && $minor -ge 9 ]] || [[ $major -ge 5 ]]; then
+        echo -e "${YELLOW}当前内核 $kernel_version 支持BBR（建议升级到5.4+）${PLAIN}"
+        return 0
+    else
+        echo -e "${RED}当前内核 $kernel_version 不支持BBR，需要升级${PLAIN}"
+        return 1
+    fi
+}
+
+# 启用BBR
+enable_bbr() {
+    if check_bbr_status; then
+        echo -e "${GREEN}BBR已经启用${PLAIN}"
+        return 0
+    fi
+    
+    if ! check_kernel_native_bbr; then
+        echo -e "${YELLOW}需要先升级内核才能启用BBR${PLAIN}"
+        return 1
+    fi
+    
+    echo -e "${BLUE}正在配置BBR...${PLAIN}"
+    
+    # 配置sysctl
+    cat > /etc/sysctl.d/99-bbr.conf <<EOF
+# BBR配置
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+
+# 基础网络优化
+net.ipv4.tcp_fastopen = 3
+net.ipv4.tcp_slow_start_after_idle = 0
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+net.core.netdev_max_backlog = 5000
+net.ipv4.tcp_max_syn_backlog = 8192
+EOF
+    
+    sysctl -p /etc/sysctl.d/99-bbr.conf >/dev/null 2>&1
+    
+    if check_bbr_status; then
+        echo -e "${GREEN}╔════════════════════════════════════════════╗${PLAIN}"
+        echo -e "${GREEN}║  BBR启用成功！                            ║${PLAIN}"
+        echo -e "${GREEN}║  您的网络加速已生效                       ║${PLAIN}"
+        echo -e "${GREEN}╚════════════════════════════════════════════╝${PLAIN}"
+        return 0
+    else
+        echo -e "${RED}BBR启用失败，请检查内核版本${PLAIN}"
+        return 1
+    fi
+}
+
+# Ubuntu/Debian升级内核
+upgrade_kernel_debian() {
+    echo -e "${BLUE}正在为 $OS $VER 升级内核...${PLAIN}"
+    
+    # 检测当前内核
+    current_kernel=$(uname -r | cut -d- -f1)
+    local major=$(echo "$current_kernel" | cut -d. -f1)
+    local minor=$(echo "$current_kernel" | cut -d. -f2)
+    
+    # 如果已经是5.4+，无需升级
+    if [[ $major -gt 5 ]] || [[ $major -eq 5 && $minor -ge 4 ]]; then
+        echo -e "${GREEN}当前内核 $current_kernel 已是最新，无需升级${PLAIN}"
+        enable_bbr
+        return 0
+    fi
+    
+    # 切换到国内镜像源加速下载
+    echo -e "${BLUE}切换到国内镜像源加速下载...${PLAIN}"
+    if [[ "$OS" == "ubuntu" ]]; then
+        sed -i 's|http://archive.ubuntu.com|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+        sed -i 's|http://security.ubuntu.com|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+    elif [[ "$OS" == "debian" ]]; then
+        sed -i 's|http://deb.debian.org|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+        sed -i 's|http://security.debian.org|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+    fi
+    
+    echo -e "${BLUE}更新软件包列表...${PLAIN}"
+    apt-get update
+    
+    # 动态获取架构，兼容ARM/x86
+    local DPKG_ARCH=$(dpkg --print-architecture)
+    
+    # Ubuntu 20.04+和Debian 11+的内核已经是5.4+
+    if [[ "$OS" == "ubuntu" ]]; then
+        if [[ "$VER" =~ ^(20|22|24) ]]; then
+            echo -e "${BLUE}安装最新内核...${PLAIN}"
+            apt-get install -y linux-generic
+        elif [[ "$VER" == "18" ]]; then
+            echo -e "${BLUE}安装HWE内核(5.4)...${PLAIN}"
+            apt-get install -y --install-recommends linux-generic-hwe-18.04
+        else
+            echo -e "${BLUE}安装HWE内核...${PLAIN}"
+            apt-get install -y --install-recommends linux-generic-hwe-16.04 2>/dev/null || \
+            apt-get install -y linux-generic
+        fi
+    elif [[ "$OS" == "debian" ]]; then
+        echo -e "${BLUE}安装最新内核（架构: $DPKG_ARCH）...${PLAIN}"
+        apt-get install -y linux-image-$DPKG_ARCH
+    fi
+    
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}╔════════════════════════════════════════════╗${PLAIN}"
+        echo -e "${GREEN}║  内核升级完成！                           ║${PLAIN}"
+        echo -e "${GREEN}║  需要重启系统才能使用新内核               ║${PLAIN}"
+        echo -e "${GREEN}╚════════════════════════════════════════════╝${PLAIN}"
+        return 0
+    else
+        echo -e "${RED}内核升级失败${PLAIN}"
+        return 1
+    fi
+}
+
+# CentOS升级内核（使用ELRepo或官方仓库）
+upgrade_kernel_centos() {
+    # CentOS 8+ 不支持，直接提示换系统
+    if [[ -n "$VER" && "$VER" -ge 8 ]] 2>/dev/null; then
+        echo ""
+        echo -e "${RED}╔══════════════════════════════════════════════════════╗${PLAIN}"
+        echo -e "${RED}║      ⚠  不支持 CentOS ${VER} 及以上版本升级内核        ║${PLAIN}"
+        echo -e "${RED}╠══════════════════════════════════════════════════════╣${PLAIN}"
+        echo -e "${RED}║  CentOS 8+ 官方已停止维护，ELRepo 支持不稳定，      ║${PLAIN}"
+        echo -e "${RED}║  强行升级内核极易导致系统损坏或无法启动。            ║${PLAIN}"
+        echo -e "${RED}║                                                      ║${PLAIN}"
+        echo -e "${YELLOW}║  推荐更换为以下系统后再使用本脚本：                 ║${PLAIN}"
+        echo -e "${GREEN}║    ✔  Ubuntu 20.04 / 22.04 / 24.04               ║${PLAIN}"
+        echo -e "${GREEN}║    ✔  Debian 10 / 11 / 12                        ║${PLAIN}"
+        echo -e "${YELLOW}║                                                      ║${PLAIN}"
+        echo -e "${YELLOW}║  如需继续使用 CentOS，可考虑迁移到：               ║${PLAIN}"
+        echo -e "${YELLOW}║    ✔  Rocky Linux 8/9  （CentOS 官方替代品）      ║${PLAIN}"
+        echo -e "${YELLOW}║    ✔  AlmaLinux 8/9                               ║${PLAIN}"
+        echo -e "${RED}╚══════════════════════════════════════════════════════╝${PLAIN}"
+        echo ""
+        read -n1 -rp "按任意键返回主菜单..." key
+        return 1
+    fi
+
+    echo -e "${BLUE}正在为 CentOS $VER 升级内核...${PLAIN}"
+    
+    # 检测当前内核
+    current_kernel=$(uname -r | cut -d- -f1)
+    local major=$(echo "$current_kernel" | cut -d. -f1)
+    local minor=$(echo "$current_kernel" | cut -d. -f2)
+    
+    if [[ $major -gt 5 ]] || [[ $major -eq 5 && $minor -ge 4 ]]; then
+        echo -e "${GREEN}当前内核 $current_kernel 已支持BBR${PLAIN}"
+        enable_bbr
+        return 0
+    fi
+    
+    fixCentOSRepo
+    
+    if [[ "$VER" == "7" ]]; then
+        # 配置yum超时参数，避免重复追加
+        echo -e "${BLUE}配置yum参数（防止下载超时）...${PLAIN}"
+        grep -q "^timeout=" /etc/yum.conf || echo "timeout=30" >> /etc/yum.conf
+        grep -q "^retries=" /etc/yum.conf || echo "retries=3" >> /etc/yum.conf
+        
+        # 尝试从ELRepo安装（优先阿里云镜像）
+        echo -e "${BLUE}安装ELRepo源...${PLAIN}"
+        rpm --import https://mirrors.aliyun.com/elrepo/RPM-GPG-KEY-elrepo.org 2>/dev/null || \
+        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+        
+        yum install -y https://mirrors.aliyun.com/elrepo/elrepo/el7/x86_64/RPMS/elrepo-release-7.0-6.el7.elrepo.noarch.rpm 2>/dev/null || \
+        yum install -y https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
+        
+        # 清理缓存
+        echo -e "${BLUE}清理yum缓存...${PLAIN}"
+        yum clean all
+        
+        # 安装最新主线内核
+        echo -e "${YELLOW}╔════════════════════════════════════════════════════╗${PLAIN}"
+        echo -e "${YELLOW}║  正在下载内核（6.x），文件较大约150-200MB        ║${PLAIN}"
+        echo -e "${YELLOW}║  预计需要3-10分钟，请耐心等待...                  ║${PLAIN}"
+        echo -e "${YELLOW}║  脚本会自动重试，如长时间无进度可Ctrl+C中断      ║${PLAIN}"
+        echo -e "${YELLOW}╚════════════════════════════════════════════════════╝${PLAIN}"
+        echo ""
+        
+        # 尝试3次
+        local attempt=1
+        local max_attempts=3
+        local success=0
+        
+        while [[ $attempt -le $max_attempts ]]; do
+            echo -e "${BLUE}尝试安装内核 (第 $attempt/$max_attempts 次)...${PLAIN}"
+            
+            # 使用yum自带的超时机制
+            yum --enablerepo=elrepo-kernel install -y kernel-ml kernel-ml-devel
+            
+            if [[ $? -eq 0 ]]; then
+                success=1
+                break
+            else
+                echo -e "${RED}安装失败，准备重试...${PLAIN}"
+                yum clean all
+                attempt=$((attempt + 1))
+                [[ $attempt -le $max_attempts ]] && sleep 3
+            fi
+        done
+        
+        if [[ $success -eq 1 ]]; then
+            # 设置默认启动新内核
+            echo -e "${BLUE}配置GRUB启动项...${PLAIN}"
+            grub2-set-default 0
+            grub2-mkconfig -o /boot/grub2/grub.cfg
+            echo -e "${GREEN}╔════════════════════════════════════════════╗${PLAIN}"
+            echo -e "${GREEN}║  内核升级完成！                           ║${PLAIN}"
+            echo -e "${GREEN}║  需要重启系统才能使用新内核               ║${PLAIN}"
+            echo -e "${GREEN}╚════════════════════════════════════════════╝${PLAIN}"
+            return 0
+        else
+            echo -e "${RED}╔═══════════════════════════════════════════════════╗${PLAIN}"
+            echo -e "${RED}║  内核升级失败（尝试${max_attempts}次后仍失败）    ║${PLAIN}"
+            echo -e "${RED}║                                                   ║${PLAIN}"
+            echo -e "${RED}║  建议手动操作：                                   ║${PLAIN}"
+            echo -e "${RED}║  1. yum clean all                                 ║${PLAIN}"
+            echo -e "${RED}║  2. yum --enablerepo=elrepo-kernel install -y kernel-ml ║${PLAIN}"
+            echo -e "${RED}║                                                   ║${PLAIN}"
+            echo -e "${RED}║  或者考虑升级到Rocky Linux / AlmaLinux           ║${PLAIN}"
+            echo -e "${RED}╚═══════════════════════════════════════════════════╝${PLAIN}"
+            return 1
+        fi
+    else
+        echo -e "${RED}CentOS $VER 不支持自动升级内核${PLAIN}"
+        return 1
+    fi
+}
+
+# 卸载多余旧内核（保留当前和最新）
+remove_old_kernels() {
+    echo -e "${YELLOW}检测旧内核...${PLAIN}"
+    
+    if [[ "$OS" =~ centos|rhel ]]; then
+        # 列出所有已安装内核
+        installed_kernels=$(rpm -qa | grep ^kernel-[0-9] | sort -V)
+        kernel_count=$(echo "$installed_kernels" | wc -l)
+        
+        if [[ $kernel_count -gt 2 ]]; then
+            echo -e "${BLUE}发现 $kernel_count 个内核，保留最新2个${PLAIN}"
+            echo -e "${YELLOW}将要删除的内核：${PLAIN}"
+            echo "$installed_kernels" | head -n -2
+            
+            read -p "确认删除这些旧内核? [y/N]: " confirm_remove
+            if [[ "$confirm_remove" =~ ^[Yy]$ ]]; then
+                # 保留最新的2个，删除其他
+                old_kernels=$(echo "$installed_kernels" | head -n -2)
+                if [[ -n "$old_kernels" ]]; then
+                    echo "$old_kernels" | xargs yum remove -y
+                    echo -e "${GREEN}旧内核清理完成${PLAIN}"
+                fi
+            else
+                echo -e "${YELLOW}已取消${PLAIN}"
+            fi
+        else
+            echo -e "${GREEN}无需清理旧内核（当前: $kernel_count 个）${PLAIN}"
+        fi
+    elif [[ "$OS" =~ debian|ubuntu ]]; then
+        current_kernel=$(uname -r)
+        installed_kernels=$(dpkg -l | grep 'linux-image-[0-9]' | awk '{print $2}')
+        
+        echo -e "${YELLOW}当前运行内核: $current_kernel${PLAIN}"
+        echo -e "${YELLOW}已安装的内核：${PLAIN}"
+        echo "$installed_kernels"
+        
+        read -p "是否清理非当前内核? [y/N]: " confirm_remove
+        if [[ "$confirm_remove" =~ ^[Yy]$ ]]; then
+            for kernel in $installed_kernels; do
+                if [[ "$kernel" != *"$current_kernel"* ]]; then
+                    echo -e "${BLUE}移除旧内核: $kernel${PLAIN}"
+                    apt-get purge -y "$kernel" 2>/dev/null
+                fi
+            done
+            apt-get autoremove -y
+            echo -e "${GREEN}旧内核清理完成${PLAIN}"
+        else
+            echo -e "${YELLOW}已取消${PLAIN}"
+        fi
+    fi
+}
+
+# 显示当前状态
+show_status() {
+    echo -e "\n${BLUE}==================== 系统状态 ====================${PLAIN}"
+    echo -e "${GREEN}系统:${PLAIN} $OS $VER"
+    echo -e "${GREEN}架构:${PLAIN} $ARCH"
+    echo -e "${GREEN}内核:${PLAIN} $(uname -r)"
+    
+    if check_bbr_status; then
+        echo -e "${GREEN}BBR状态:${PLAIN} ✅ 已启用"
+    else
+        echo -e "${GREEN}BBR状态:${PLAIN} ❌ 未启用"
+    fi
+    
+    if lsmod | grep -q bbr; then
+        echo -e "${GREEN}BBR模块:${PLAIN} ✅ 已加载"
+    else
+        echo -e "${GREEN}BBR模块:${PLAIN} ❌ 未加载"
+    fi
+    
+    local qdisc=$(sysctl net.core.default_qdisc 2>/dev/null | awk '{print $3}')
+    echo -e "${GREEN}队列算法:${PLAIN} ${qdisc:-未设置}"
+    
+    local congestion=$(sysctl net.ipv4.tcp_congestion_control 2>/dev/null | awk '{print $3}')
+    echo -e "${GREEN}拥塞算法:${PLAIN} ${congestion:-未设置}"
+    
+    echo -e "${BLUE}=================================================${PLAIN}\n"
+}
+
+# 主菜单
+show_menu() {
+    clear
+    echo -e "${BLUE}╔═════════════════════════════════════════════════╗${PLAIN}"
+    echo -e "${BLUE}║       BBR一键加速脚本 v${sh_ver} (优化版)        ║${PLAIN}"
+    echo -e "${BLUE}║       适用于Linux新手，自动检测依赖            ║${PLAIN}"
+    echo -e "${BLUE}║                                                 ║${PLAIN}"
+    echo -e "${BLUE}║       作者: 静水流深    QQ群: 615298           ║${PLAIN}"
+    echo -e "${BLUE}╚═════════════════════════════════════════════════╝${PLAIN}"
+    echo ""
+    show_status
+    echo -e "${GREEN}1.${PLAIN} 安装/启用 BBR ${YELLOW}(推荐先选此项)${PLAIN}"
+    echo -e "${GREEN}2.${PLAIN} 升级内核（Ubuntu/Debian）"
+    echo -e "${GREEN}3.${PLAIN} 升级内核（CentOS）"
+    echo -e "${GREEN}4.${PLAIN} 清理旧内核 ${YELLOW}(释放/boot空间)${PLAIN}"
+    echo -e "${GREEN}5.${PLAIN} 查看状态"
+    echo " -------------"
+    echo -e "${GREEN}0.${PLAIN} 退出"
+    echo ""
+    read -p "请选择操作 [0-5]: " choice
+    
+    case $choice in
+        1)
+            if check_kernel_native_bbr; then
+                enable_bbr
+            else
+                echo -e "${YELLOW}当前内核不支持BBR，请先升级内核${PLAIN}"
+                echo -e "${BLUE}提示：Ubuntu/Debian选2，CentOS选3${PLAIN}"
+            fi
+            ;;
+        2)
+            if [[ "$OS" =~ debian|ubuntu ]]; then
+                check_boot_space
+                upgrade_kernel_debian
+                read -p "是否现在重启? [y/N]: " reboot_now
+                [[ "$reboot_now" =~ ^[Yy]$ ]] && reboot
+            else
+                echo -e "${RED}此选项仅适用于Ubuntu/Debian${PLAIN}"
+            fi
+            ;;
+        3)
+            if [[ "$OS" =~ centos|rhel ]]; then
+                check_boot_space
+                upgrade_kernel_centos
+                read -p "是否现在重启? [y/N]: " reboot_now
+                [[ "$reboot_now" =~ ^[Yy]$ ]] && reboot
+            else
+                echo -e "${RED}此选项仅适用于CentOS${PLAIN}"
+            fi
+            ;;
+        4)
+            remove_old_kernels
+            ;;
+        5)
+            show_status
+            ;;
+        0)
+            echo -e "${GREEN}感谢使用！${PLAIN}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}无效选择，请输入0-5${PLAIN}"
+            ;;
+    esac
+    
+    echo ""
+    read -p "按回车键继续..." 
+    show_menu
+}
+
+# 初始化检查
+echo -e "${BLUE}╔═════════════════════════════════════════════════╗${PLAIN}"
+echo -e "${BLUE}║            执行预检查...                        ║${PLAIN}"
+echo -e "${BLUE}╚═════════════════════════════════════════════════╝${PLAIN}"
+echo ""
+
+# 执行所有预检查
+check_dependencies
+check_network
+check_virt
+fixCentOSRepo
+
+echo ""
+echo -e "${GREEN}预检查完成！${PLAIN}"
+sleep 1
+
+# 脚本入口
+show_menu
