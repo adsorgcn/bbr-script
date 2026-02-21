@@ -5,7 +5,7 @@ export PATH
 #=================================================
 #	System: CentOS 6/7, Debian 8+, Ubuntu 16+
 #	Description: 一键全自动优化加速你的服务器
-#	Version: 1.0.2
+#	Version: 1.0.3
 #	Author: 静水流深
 #	QQ群: 615298
 #=================================================
@@ -16,7 +16,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;36m'
 PLAIN='\033[0m'
 
-sh_ver="1.0.2"
+sh_ver="1.0.3"
 
 # 检查root权限
 [[ $EUID -ne 0 ]] && echo -e "${RED}错误：请使用root用户运行此脚本${PLAIN}" && exit 1
@@ -61,9 +61,16 @@ check_dependencies() {
     # 检查并安装依赖
     local need_install=()
     for dep in $DEPS; do
-        if ! command -v $dep &>/dev/null && ! rpm -q $dep &>/dev/null && ! dpkg -l | grep -q "^ii  $dep"; then
-            need_install+=($dep)
+        local installed=0
+        # ca-certificates 是包名不是命令，需要特殊检测
+        if [[ "$dep" == "ca-certificates" ]]; then
+            rpm -q ca-certificates &>/dev/null && installed=1
+            dpkg -l ca-certificates 2>/dev/null | grep -q "^ii" && installed=1
+            [[ -f /etc/ssl/certs/ca-certificates.crt || -f /etc/pki/tls/certs/ca-bundle.crt ]] && installed=1
+        else
+            command -v "$dep" &>/dev/null && installed=1
         fi
+        [[ $installed -eq 0 ]] && need_install+=("$dep")
     done
     
     if [[ ${#need_install[@]} -gt 0 ]]; then
@@ -146,14 +153,21 @@ check_boot_space() {
 check_network() {
     echo -e "${BLUE}检查网络连接...${PLAIN}"
     
-    # 测试网络连接（优先国内镜像）
-    if curl -s --connect-timeout 5 https://mirrors.aliyun.com > /dev/null 2>&1; then
-        echo -e "${GREEN}网络连接正常（阿里云镜像）${PLAIN}"
-        return 0
-    elif curl -s --connect-timeout 5 https://www.baidu.com > /dev/null 2>&1; then
-        echo -e "${GREEN}网络连接正常${PLAIN}"
-        return 0
-    elif ping -c 2 8.8.8.8 > /dev/null 2>&1; then
+    local mirrors=(
+        "https://mirrors.aliyun.com"
+        "https://mirrors.163.com"
+        "https://mirrors.tuna.tsinghua.edu.cn"
+        "https://www.baidu.com"
+    )
+    
+    for mirror in "${mirrors[@]}"; do
+        if curl -s --connect-timeout 5 "$mirror" > /dev/null 2>&1; then
+            echo -e "${GREEN}网络连接正常（${mirror}）${PLAIN}"
+            return 0
+        fi
+    done
+    
+    if ping -c 2 8.8.8.8 > /dev/null 2>&1; then
         echo -e "${YELLOW}网络连接正常但HTTPS访问受限${PLAIN}"
         return 0
     else
@@ -165,9 +179,9 @@ check_network() {
 # 修复CentOS死源
 fixCentOSRepo() {
     [[ ! "$OS" =~ centos ]] && return
-    [[ "$VER" != "6" && "$VER" != "7" ]] && return
+    [[ "$VER" != "6" && "$VER" != "7" && "$VER" != "8" ]] && return
     
-    echo -e "${YELLOW}检测到CentOS ${VER}，官方源已停服，切换到Vault源...${PLAIN}"
+    echo -e "${YELLOW}检测到CentOS ${VER}，官方源已停服，切换到Vault/阿里云源...${PLAIN}"
     mkdir -p /etc/yum.repos.d/backup
     mv /etc/yum.repos.d/CentOS-*.repo /etc/yum.repos.d/backup/ 2>/dev/null
     
@@ -202,9 +216,27 @@ baseurl=https://mirrors.aliyun.com/centos-vault/6.10/updates/$basearch/
 gpgcheck=0
 enabled=1
 EOF
+    elif [[ "$VER" == "8" ]]; then
+        cat > /etc/yum.repos.d/CentOS-Vault.repo <<'EOF'
+[baseos]
+name=CentOS-8-Vault-BaseOS
+baseurl=https://mirrors.aliyun.com/centos-vault/8.5.2111/BaseOS/$basearch/os/
+gpgcheck=0
+enabled=1
+[appstream]
+name=CentOS-8-Vault-AppStream
+baseurl=https://mirrors.aliyun.com/centos-vault/8.5.2111/AppStream/$basearch/os/
+gpgcheck=0
+enabled=1
+[extras]
+name=CentOS-8-Vault-Extras
+baseurl=https://mirrors.aliyun.com/centos-vault/8.5.2111/extras/$basearch/os/
+gpgcheck=0
+enabled=1
+EOF
     fi
     yum clean all >/dev/null 2>&1
-    echo -e "${GREEN}CentOS Vault源配置完成${PLAIN}"
+    echo -e "${GREEN}CentOS ${VER} Vault源配置完成${PLAIN}"
 }
 
 # 检测BBR状态
@@ -297,8 +329,21 @@ upgrade_kernel_debian() {
         return 0
     fi
     
+    # 切换到国内镜像源加速下载
+    echo -e "${BLUE}切换到国内镜像源加速下载...${PLAIN}"
+    if [[ "$OS" == "ubuntu" ]]; then
+        sed -i 's|http://archive.ubuntu.com|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+        sed -i 's|http://security.ubuntu.com|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+    elif [[ "$OS" == "debian" ]]; then
+        sed -i 's|http://deb.debian.org|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+        sed -i 's|http://security.debian.org|https://mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null
+    fi
+    
     echo -e "${BLUE}更新软件包列表...${PLAIN}"
     apt-get update
+    
+    # 动态获取架构，兼容ARM/x86
+    local DPKG_ARCH=$(dpkg --print-architecture)
     
     # Ubuntu 20.04+和Debian 11+的内核已经是5.4+
     if [[ "$OS" == "ubuntu" ]]; then
@@ -314,8 +359,8 @@ upgrade_kernel_debian() {
             apt-get install -y linux-generic
         fi
     elif [[ "$OS" == "debian" ]]; then
-        echo -e "${BLUE}安装最新内核...${PLAIN}"
-        apt-get install -y linux-image-amd64
+        echo -e "${BLUE}安装最新内核（架构: $DPKG_ARCH）...${PLAIN}"
+        apt-get install -y linux-image-$DPKG_ARCH
     fi
     
     if [[ $? -eq 0 ]]; then
@@ -370,20 +415,18 @@ upgrade_kernel_centos() {
     fixCentOSRepo
     
     if [[ "$VER" == "7" ]]; then
-        # 配置yum超时参数，避免卡住
+        # 配置yum超时参数，避免重复追加
         echo -e "${BLUE}配置yum参数（防止下载超时）...${PLAIN}"
-        echo "timeout=30" >> /etc/yum.conf
-        echo "retries=3" >> /etc/yum.conf
+        grep -q "^timeout=" /etc/yum.conf || echo "timeout=30" >> /etc/yum.conf
+        grep -q "^retries=" /etc/yum.conf || echo "retries=3" >> /etc/yum.conf
         
         # 尝试从ELRepo安装（优先阿里云镜像）
         echo -e "${BLUE}安装ELRepo源...${PLAIN}"
         rpm --import https://mirrors.aliyun.com/elrepo/RPM-GPG-KEY-elrepo.org 2>/dev/null || \
         rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
         
-        if [[ "$VER" == "7" ]]; then
-            yum install -y https://mirrors.aliyun.com/elrepo/elrepo/el7/x86_64/RPMS/elrepo-release-7.0-6.el7.elrepo.noarch.rpm 2>/dev/null || \
-            yum install -y https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
-        fi
+        yum install -y https://mirrors.aliyun.com/elrepo/elrepo/el7/x86_64/RPMS/elrepo-release-7.0-6.el7.elrepo.noarch.rpm 2>/dev/null || \
+        yum install -y https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
         
         # 清理缓存
         echo -e "${BLUE}清理yum缓存...${PLAIN}"
